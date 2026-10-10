@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../routes/app_routes.dart';
 import '../services/supabase_service.dart';
 import '../services/message_service.dart';
+import 'dashboard_controller.dart';
 
 class AuthController extends GetxController {
   final email = ''.obs;
@@ -39,9 +40,13 @@ class AuthController extends GetxController {
           );
         }
 
+        if (Get.isRegistered<DashboardController>()) {
+          Get.find<DashboardController>().changePage(0);
+        }
+
         await MessageService.showSuccess(
           title: 'Login Successful',
-          message: 'Welcome back! Redirecting to dashboard...',
+          message: 'Welcome back! Redirecting to home...',
           onConfirm: () => Get.offAllNamed(AppRoutes.dashboard),
         );
       } on AuthException catch (e) {
@@ -127,14 +132,52 @@ class AuthController extends GetxController {
   }
 
   String _authErrorMessage(Object error) {
-    final message = error.toString();
-    if (message.contains('Could not resolve host') ||
-        message.contains('XMLErrorRequest') ||
-        message.contains('NetworkError') ||
-        message.contains('Failed host lookup')) {
-      return 'Unable to connect to Supabase. Please verify your Supabase URL, network connectivity, and that the project URL is correct.';
+    String msg = '';
+    if (error is AuthException) {
+      msg = error.message;
+    } else {
+      msg = error.toString();
     }
 
-    return 'Error: $message\n\nMake sure your Supabase URL and key are correct.';
+    final lowerMsg = msg.toLowerCase();
+
+    if (lowerMsg.contains('invalid login credentials') ||
+        lowerMsg.contains('invalid_credentials') ||
+        lowerMsg.contains('invalid user credentials')) {
+      return 'Incorrect email or password. Please check your credentials and try again.';
+    }
+
+    if (lowerMsg.contains('email not confirmed')) {
+      return 'Your email address has not been confirmed. Please check your inbox for the verification link.';
+    }
+
+    if (lowerMsg.contains('user not found')) {
+      return 'No account found with this email address.';
+    }
+
+    if (lowerMsg.contains('rate limit') || lowerMsg.contains('too many requests')) {
+      return 'Too many attempts. Please wait a moment and try again.';
+    }
+
+    if (lowerMsg.contains('could not resolve host') ||
+        lowerMsg.contains('xmlerrorrequest') ||
+        lowerMsg.contains('networkerror') ||
+        lowerMsg.contains('failed host lookup') ||
+        lowerMsg.contains('socketexception')) {
+      return 'Unable to connect to server. Please check your internet connection.';
+    }
+
+    if (error is AuthException && error.message.isNotEmpty) {
+      return error.message;
+    }
+
+    final cleanMsg = msg
+        .replaceAll(RegExp(r'^AuthException\(message:\s*'), '')
+        .replaceAll(RegExp(r', statusCode:.*$'), '')
+        .replaceAll(RegExp(r'^Exception:\s*'), '');
+
+    return cleanMsg.isNotEmpty
+        ? cleanMsg
+        : 'An unexpected authentication error occurred. Please try again.';
   }
 }

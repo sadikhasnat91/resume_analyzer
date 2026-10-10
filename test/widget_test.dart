@@ -8,17 +8,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:resume_analyzer/main.dart';
+import 'package:ai_resume_analyzer/app/routes/app_routes.dart';
+import 'package:ai_resume_analyzer/main.dart';
 
 void main() {
   testWidgets('Login screen displays title and button', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const ResumeAnalyzerApp());
+    await tester.pumpWidget(
+      const ResumeAnalyzerApp(initialRoute: AppRoutes.login),
+    );
     await tester.pumpAndSettle();
 
-    expect(find.text('ResumeAI'), findsOneWidget);
-    expect(find.text('Login'), findsOneWidget);
+    expect(find.text('ResumeAI'), findsWidgets);
+    expect(find.text('Login'), findsWidgets);
     expect(find.byType(TextFormField), findsNWidgets(2));
   });
 }

@@ -1,6 +1,7 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'app/routes/app_pages.dart';
+import 'app/routes/app_routes.dart';
 import 'app/services/config_service.dart';
 import 'app/services/supabase_service.dart';
 import 'app/widgets/responsive_builder.dart';
@@ -17,10 +18,12 @@ Future<void> main() async {
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml5dm5qdGxiaXN0cGFvdndoeGRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MjczOTQsImV4cCI6MjA5NTAwMzM5NH0.HdRtDRxjGNdqEeATGMlpBTxG5e-ThXtIhWJdixIjYH8',
   );
 
-  // Gemini API key can be provided during development with --dart-define
-  // configService.setGeminiApiKey(
-  //   const String.fromEnvironment('GEMINI_API_KEY', defaultValue: ''),
-  // );
+  configService.setGeminiApiKey(
+    const String.fromEnvironment(
+      'GEMINI_API_KEY',
+      defaultValue: 'AQ.Ab8RN6Kt28OTa-MhqklaVahh5KiMKLom_5miZggjQLRm1ouFTA',
+    ),
+  );
 
   configService.printCurrentConfig();
 
@@ -30,7 +33,8 @@ Future<void> main() async {
 }
 
 class ResumeAnalyzerApp extends StatelessWidget {
-  const ResumeAnalyzerApp({super.key});
+  final String initialRoute;
+  const ResumeAnalyzerApp({super.key, this.initialRoute = AppRoutes.splash});
 
   @override
   Widget build(BuildContext context) {
@@ -76,13 +80,8 @@ class ResumeAnalyzerApp extends StatelessWidget {
           ),
         ),
       ),
-      initialRoute: '/login',
+      initialRoute: initialRoute,
       getPages: AppPages.pages,
-      home: ResponsiveBuilder(
-        builder: (context, isDesktop, isTablet, isMobile) {
-          return SizedBox.expand(child: SizedBox.shrink());
-        },
-      ),
     );
   }
 }

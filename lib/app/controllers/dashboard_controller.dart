@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
 
 class DashboardController extends GetxController {
-  final selectedIndex = 1.obs;
+  final selectedIndex = 0.obs;
 
   void changePage(int index) {
     selectedIndex.value = index;

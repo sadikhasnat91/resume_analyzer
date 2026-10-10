@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 /// Responsive utility class for managing responsive design across all devices
 class Responsive {
-  static late MediaQueryData _mediaQueryData;
   static late double screenWidth;
   static late double screenHeight;
   static late double blockSizeHorizontal;
@@ -17,10 +16,12 @@ class Responsive {
 
   /// Initialize responsive design based on device screen size
   static void init(BoxConstraints constraints) {
-    _mediaQueryData = MediaQueryData.fromView(WidgetsBinding.instance.window);
-
-    screenWidth = constraints.maxWidth;
-    screenHeight = constraints.maxHeight;
+    screenWidth = constraints.maxWidth.isFinite && constraints.maxWidth > 0
+        ? constraints.maxWidth
+        : 400.0;
+    screenHeight = constraints.maxHeight.isFinite && constraints.maxHeight > 0
+        ? constraints.maxHeight
+        : 800.0;
 
     blockSizeHorizontal = screenWidth / 100;
     blockSizeVertical = screenHeight / 100;
@@ -29,12 +30,12 @@ class Responsive {
     imageSizeMultiplier = blockSizeVertical;
 
     // Device type detection
-    isMobilePortrait = screenWidth < 450 && screenHeight > screenWidth;
-    isMobileLandscape = screenWidth > 450 && screenHeight < screenWidth;
+    isMobilePortrait = screenWidth < 450 && screenHeight >= screenWidth;
+    isMobileLandscape = screenWidth >= 450 && screenHeight < screenWidth;
     isTabletPortrait =
-        screenWidth < 850 && screenWidth > 450 && screenHeight > screenWidth;
-    isTabletLandscape = screenWidth > 850 && screenHeight < screenWidth;
-    isDesktop = screenWidth > 1000;
+        screenWidth < 850 && screenWidth >= 450 && screenHeight >= screenWidth;
+    isTabletLandscape = screenWidth >= 850 && screenHeight < screenWidth;
+    isDesktop = screenWidth >= 1000;
   }
 
   /// Get responsive padding based on device type

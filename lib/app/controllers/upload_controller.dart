@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import 'package:file_picker/file_picker.dart';
+import '../controllers/history_controller.dart';
 import '../routes/app_routes.dart';
 import '../services/gemini_service.dart';
 import '../services/message_service.dart';
@@ -93,19 +94,22 @@ class UploadController extends GetxController {
     isLoading.value = true;
 
     try {
-      final fileText = await ResumeTextService.extractText(selectedFile.value!);
-      if (fileText.trim().isEmpty) {
-        throw StateError(
-          'Unable to extract resume text from the selected file.',
-        );
-      }
+      final file = selectedFile.value!;
+      final fileText = await ResumeTextService.extractText(file);
 
       final analysisResult = await GeminiService.analyzeResume(
         fileName: fileName.value,
         category: selectedCategory.value,
         seniority: selectedSeniority.value,
         resumeText: fileText,
+        fileBytes: file.bytes,
+        fileExtension: file.extension,
       );
+
+      final historyController = Get.isRegistered<HistoryController>()
+          ? Get.find<HistoryController>()
+          : Get.put(HistoryController());
+      await historyController.addResume(analysisResult);
 
       Get.toNamed(AppRoutes.analysis, arguments: analysisResult);
     } catch (e) {

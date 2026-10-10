@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/supabase_service.dart';
 import '../routes/app_routes.dart';
 import '../services/message_service.dart';
+import '../services/config_service.dart';
 
 class ProfileController extends GetxController {
   final userName = 'ResumeAI User'.obs;
@@ -20,10 +21,16 @@ class ProfileController extends GetxController {
   }
 
   void loadUserData() {
-    final user = SupabaseService.auth.currentUser;
-    if (user != null) {
-      userName.value = user.userMetadata?['full_name'] ?? 'ResumeAI User';
-      email.value = user.email ?? 'user@example.com';
+    try {
+      if (SupabaseService.isInitialized && SupabaseService.isConfigured) {
+        final user = SupabaseService.auth.currentUser;
+        if (user != null) {
+          userName.value = user.userMetadata?['full_name'] ?? 'ResumeAI User';
+          email.value = user.email ?? 'user@example.com';
+        }
+      }
+    } catch (e) {
+      debugPrint('Error loading user data: $e');
     }
   }
 
@@ -31,6 +38,8 @@ class ProfileController extends GetxController {
     final tempUserName = userName.value;
     final tempPhoneNumber = phoneNumber.value;
     final tempLanguage = language.value;
+    final currentGeminiKey = ConfigService.to.geminiApiKey.value;
+    String newGeminiKey = currentGeminiKey;
     final isSaving = false.obs;
 
     Get.defaultDialog(
@@ -83,6 +92,17 @@ class ProfileController extends GetxController {
                 prefixIcon: const Icon(Icons.language),
               ),
             ),
+            const SizedBox(height: 12),
+            TextFormField(
+              initialValue: currentGeminiKey,
+              onChanged: (value) => newGeminiKey = value.trim(),
+              decoration: InputDecoration(
+                labelText: 'Gemini API Key',
+                hintText: 'Enter your Google Gemini API Key',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                prefixIcon: const Icon(Icons.key),
+              ),
+            ),
           ],
         ),
       ),
@@ -92,6 +112,9 @@ class ProfileController extends GetxController {
       confirm: Obx(() => ElevatedButton(
         onPressed: isSaving.value ? null : () {
           isSaving.value = true;
+          if (newGeminiKey.isNotEmpty) {
+            ConfigService.to.setGeminiApiKey(newGeminiKey);
+          }
           Future.delayed(const Duration(milliseconds: 500), () {
             isSaving.value = false;
             Get.back();

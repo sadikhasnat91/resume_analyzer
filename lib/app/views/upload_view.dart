@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/upload_controller.dart';
-import '../utils/responsive.dart';
-import '../widgets/responsive_builder.dart';
-import '../widgets/loading_spinner.dart';
+import '../widgets/ai_scanner_overlay.dart';
+import '../widgets/app_logo.dart';
 
 class UploadView extends GetView<UploadController> {
   const UploadView({super.key});
@@ -14,373 +13,532 @@ class UploadView extends GetView<UploadController> {
       Get.put(UploadController());
     }
 
-    return ResponsiveBuilder(
-      builder: (context, isDesktop, isTablet, isMobile) {
-        return Scaffold(
-          body: LoadingOverlay(
-            isLoading: controller.isLoading.value,
-            message: 'Analyzing your resume...',
-            child: SafeArea(
-              child: Padding(
-                padding: Responsive.responsivePaddingHorizontal,
-                child: SingleChildScrollView(
+    final size = MediaQuery.of(context).size;
+    final isDesktop = size.width > 768;
+
+    return Obx(
+      () => AiScannerOverlay(
+        isScanning: controller.isLoading.value,
+        fileName: controller.fileName.value.isNotEmpty
+            ? controller.fileName.value
+            : 'Resume Document',
+        category: controller.selectedCategory.value,
+        seniority: controller.selectedSeniority.value,
+        child: Scaffold(
+          backgroundColor: const Color(0xFFF8FAFC),
+          body: SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.fromLTRB(
+                  isDesktop ? 48 : 20,
+                  24,
+                  isDesktop ? 48 : 20,
+                  100,
+                ),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 720),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SizedBox(height: Responsive.blockSizeVertical * 1),
-                      Text(
-                        'Analyze Resume',
-                        style: TextStyle(
-                          fontSize: Responsive.responsiveFontSize(28),
-                          fontWeight: FontWeight.w700,
-                        ),
+                      // Header with AppLogo & Title
+                      Row(
+                        children: [
+                          const AppLogo(size: 48, showGlow: true),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'AI Resume Analysis',
+                                  style: TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.w800,
+                                    color: Color(0xFF0F172A),
+                                    letterSpacing: -0.5,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Powered by Google Gemini 3.x Deep Evaluation',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.blueGrey[600],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                      SizedBox(height: Responsive.blockSizeVertical * 2.5),
-                      // Upload Container or File Info
+
+                      const SizedBox(height: 24),
+
+                      // Upload Card Zone
                       Obx(
                         () => controller.selectedFile.value == null
-                            ? GestureDetector(
-                                onTap: controller.pickFile,
-                                child: Container(
-                                  width: double.infinity,
-                                  padding: EdgeInsets.symmetric(
-                                    vertical: Responsive.blockSizeVertical * 3,
-                                    horizontal:
-                                        Responsive.blockSizeHorizontal * 5,
+                            ? _buildUploadDropzone(context)
+                            : _buildSelectedFileCard(context),
+                      ),
+
+                      const SizedBox(height: 28),
+
+                      // Configuration Options Card
+                      Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF0F172A).withValues(alpha: 0.04),
+                              blurRadius: 18,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Row(
+                              children: [
+                                Icon(
+                                  Icons.tune_rounded,
+                                  size: 20,
+                                  color: Color(0xFF2563EB),
+                                ),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Target Role Alignment',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF0F172A),
                                   ),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFDCEAF3),
-                                    borderRadius: BorderRadius.circular(
-                                      Responsive.responsiveBorderRadius,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 18),
+
+                            // Job Category Dropdown
+                            const Text(
+                              'Target Industry / Category',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF475569),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Obx(
+                              () => Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF8FAFC),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<String>(
+                                    value: controller.selectedCategory.value,
+                                    isExpanded: true,
+                                    icon: const Icon(
+                                      Icons.keyboard_arrow_down_rounded,
+                                      color: Color(0xFF2563EB),
                                     ),
-                                    border: Border.all(
-                                      color: const Color(0xFFB5D1DE),
+                                    items: controller.categories
+                                        .map(
+                                          (cat) => DropdownMenuItem(
+                                            value: cat,
+                                            child: Text(
+                                              cat,
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w600,
+                                                color: Color(0xFF1E293B),
+                                              ),
+                                            ),
+                                          ),
+                                        )
+                                        .toList(),
+                                    onChanged: (val) {
+                                      if (val != null) {
+                                        controller.selectedCategory.value = val;
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                            const SizedBox(height: 20),
+
+                            // Seniority Level Dropdown
+                            const Text(
+                              'Target Seniority Level',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: Color(0xFF475569),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Obx(
+                              () => Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF8FAFC),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<String>(
+                                    value: controller.selectedSeniority.value,
+                                    isExpanded: true,
+                                    icon: const Icon(
+                                      Icons.keyboard_arrow_down_rounded,
+                                      color: Color(0xFF2563EB),
+                                    ),
+                                    items: controller.seniorities
+                                        .map(
+                                          (level) => DropdownMenuItem(
+                                            value: level,
+                                            child: Text(
+                                              level,
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w600,
+                                                color: Color(0xFF1E293B),
+                                              ),
+                                            ),
+                                          ),
+                                        )
+                                        .toList(),
+                                    onChanged: (val) {
+                                      if (val != null) {
+                                        controller.selectedSeniority.value = val;
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 28),
+
+                      // Action Button
+                      Obx(
+                        () {
+                          final hasFile = controller.selectedFile.value != null;
+                          return Column(
+                            children: [
+                              Container(
+                                width: double.infinity,
+                                height: 56,
+                                decoration: BoxDecoration(
+                                  gradient: hasFile
+                                      ? const LinearGradient(
+                                          colors: [
+                                            Color(0xFF2563EB),
+                                            Color(0xFF10B981),
+                                          ],
+                                          begin: Alignment.centerLeft,
+                                          end: Alignment.centerRight,
+                                        )
+                                      : null,
+                                  color: hasFile ? null : const Color(0xFFE2E8F0),
+                                  borderRadius: BorderRadius.circular(18),
+                                  boxShadow: hasFile
+                                      ? [
+                                          BoxShadow(
+                                            color: const Color(0xFF2563EB)
+                                                .withValues(alpha: 0.35),
+                                            blurRadius: 20,
+                                            offset: const Offset(0, 8),
+                                          ),
+                                        ]
+                                      : null,
+                                ),
+                                child: ElevatedButton(
+                                  onPressed: hasFile && !controller.isLoading.value
+                                      ? controller.analyze
+                                      : null,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.transparent,
+                                    shadowColor: Colors.transparent,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(18),
                                     ),
                                   ),
-                                  child: Column(
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       Icon(
-                                        Icons.upload_outlined,
-                                        size: Responsive.responsiveFontSize(40),
-                                        color: const Color(0xFF176D8D),
+                                        Icons.auto_awesome_rounded,
+                                        size: 20,
+                                        color: hasFile
+                                            ? Colors.white
+                                            : const Color(0xFF94A3B8),
                                       ),
-                                      SizedBox(
-                                        height:
-                                            Responsive.blockSizeVertical * 1.5,
-                                      ),
+                                      const SizedBox(width: 10),
                                       Text(
-                                        'Tap to upload file',
+                                        'Launch AI Resume Analysis',
                                         style: TextStyle(
-                                          fontSize:
-                                              Responsive.responsiveFontSize(18),
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      SizedBox(
-                                        height:
-                                            Responsive.blockSizeVertical * 0.8,
-                                      ),
-                                      Text(
-                                        '(PDF or Word, max 5MB)',
-                                        style: TextStyle(
-                                          fontSize:
-                                              Responsive.responsiveFontSize(14),
-                                          color: Colors.black54,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w700,
+                                          color: hasFile
+                                              ? Colors.white
+                                              : const Color(0xFF94A3B8),
+                                          letterSpacing: 0.3,
                                         ),
                                       ),
                                     ],
                                   ),
                                 ),
-                              )
-                            : Container(
-                                width: double.infinity,
-                                padding: EdgeInsets.all(
-                                  Responsive.blockSizeHorizontal * 5,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(
-                                    Responsive.responsiveBorderRadius,
-                                  ),
-                                  border: Border.all(
-                                    color: const Color(0xFF4CAF50),
-                                    width: 2,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: const Color.fromRGBO(
-                                        76,
-                                        175,
-                                        80,
-                                        0.1,
-                                      ),
-                                      blurRadius: 8,
-                                    ),
-                                  ],
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                'File Selected ✓',
-                                                style: TextStyle(
-                                                  fontSize:
-                                                      Responsive.responsiveFontSize(
-                                                        14,
-                                                      ),
-                                                  fontWeight: FontWeight.w600,
-                                                  color: const Color(
-                                                    0xFF4CAF50,
-                                                  ),
-                                                ),
-                                              ),
-                                              SizedBox(
-                                                height:
-                                                    Responsive
-                                                        .blockSizeVertical *
-                                                    0.8,
-                                              ),
-                                              Text(
-                                                controller.fileName.value,
-                                                style: TextStyle(
-                                                  fontSize:
-                                                      Responsive.responsiveFontSize(
-                                                        16,
-                                                      ),
-                                                  fontWeight: FontWeight.w700,
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                              SizedBox(
-                                                height:
-                                                    Responsive
-                                                        .blockSizeVertical *
-                                                    0.5,
-                                              ),
-                                              Text(
-                                                'Size: ${(controller.selectedFile.value!.size / 1024).toStringAsFixed(2)} KB',
-                                                style: TextStyle(
-                                                  fontSize:
-                                                      Responsive.responsiveFontSize(
-                                                        13,
-                                                      ),
-                                                  color: Colors.black54,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        SizedBox(
-                                          width:
-                                              Responsive.blockSizeHorizontal *
-                                              3,
-                                        ),
-                                        Icon(
-                                          Icons.check_circle,
-                                          size: Responsive.responsiveFontSize(
-                                            40,
-                                          ),
-                                          color: const Color(0xFF4CAF50),
-                                        ),
-                                      ],
-                                    ),
-                                    SizedBox(
-                                      height:
-                                          Responsive.blockSizeVertical * 1.5,
-                                    ),
-                                    // Change or Remove Button
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: TextButton(
-                                            onPressed: controller.pickFile,
-                                            child: Text(
-                                              'Change File',
-                                              style: TextStyle(
-                                                fontSize:
-                                                    Responsive.responsiveFontSize(
-                                                      14,
-                                                    ),
-                                                color: const Color(0xFF176D8D),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        Expanded(
-                                          child: TextButton(
-                                            onPressed: controller.clearFile,
-                                            child: Text(
-                                              'Remove',
-                                              style: TextStyle(
-                                                fontSize:
-                                                    Responsive.responsiveFontSize(
-                                                      14,
-                                                    ),
-                                                color: Colors.red,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
                               ),
-                      ),
-                      SizedBox(height: Responsive.blockSizeVertical * 2.5),
-                      // Job Category
-                      Text(
-                        'Select Job Category',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: Responsive.responsiveFontSize(16),
-                        ),
-                      ),
-                      SizedBox(height: Responsive.blockSizeVertical * 1),
-                      GetX<UploadController>(
-                        builder: (controller) {
-                          return DropdownButtonFormField<String>(
-                            initialValue: controller.selectedCategory.value,
-                            items: controller.categories
-                                .map(
-                                  (category) => DropdownMenuItem(
-                                    value: category,
-                                    child: Text(category),
+                              if (!hasFile) ...[
+                                const SizedBox(height: 10),
+                                const Center(
+                                  child: Text(
+                                    'Please select a PDF or Word document above to proceed',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: Color(0xFF94A3B8),
+                                    ),
                                   ),
-                                )
-                                .toList(),
-                            decoration: InputDecoration(
-                              filled: true,
-                              fillColor: Colors.white,
-                              contentPadding: EdgeInsets.symmetric(
-                                horizontal: Responsive.blockSizeHorizontal * 4,
-                                vertical: Responsive.blockSizeVertical * 2,
-                              ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(
-                                  Responsive.responsiveBorderRadius,
                                 ),
-                                borderSide: BorderSide.none,
-                              ),
-                            ),
-                            onChanged: (value) {
-                              if (value != null) {
-                                controller.selectedCategory.value = value;
-                              }
-                            },
+                              ],
+                            ],
                           );
                         },
                       ),
-                      SizedBox(height: Responsive.blockSizeVertical * 2),
-                      // Seniority Level
-                      Text(
-                        'Select Seniority Level',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: Responsive.responsiveFontSize(16),
-                        ),
-                      ),
-                      SizedBox(height: Responsive.blockSizeVertical * 1),
-                      GetX<UploadController>(
-                        builder: (controller) {
-                          return DropdownButtonFormField<String>(
-                            initialValue: controller.selectedSeniority.value,
-                            items: controller.seniorities
-                                .map(
-                                  (level) => DropdownMenuItem(
-                                    value: level,
-                                    child: Text(level),
-                                  ),
-                                )
-                                .toList(),
-                            decoration: InputDecoration(
-                              filled: true,
-                              fillColor: Colors.white,
-                              contentPadding: EdgeInsets.symmetric(
-                                horizontal: Responsive.blockSizeHorizontal * 4,
-                                vertical: Responsive.blockSizeVertical * 2,
-                              ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(
-                                  Responsive.responsiveBorderRadius,
-                                ),
-                                borderSide: BorderSide.none,
-                              ),
-                            ),
-                            onChanged: (value) {
-                              if (value != null) {
-                                controller.selectedSeniority.value = value;
-                              }
-                            },
-                          );
-                        },
-                      ),
-                      SizedBox(height: Responsive.blockSizeVertical * 3),
-                      // Analyze Button
-                      Obx(
-                        () => Column(
-                          children: [
-                            SizedBox(
-                              width: double.infinity,
-                              height: Responsive.buttonHeight,
-                              child: ElevatedButton(
-                                onPressed: controller.isLoading.value
-                                    ? null
-                                    : (controller.selectedFile.value == null
-                                          ? null
-                                          : controller.analyze),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor:
-                                      controller.selectedFile.value == null
-                                      ? Colors.grey[400]
-                                      : const Color(0xFF176D8D),
-                                ),
-                                child: controller.isLoading.value
-                                    ? const LoadingButtonIndicator()
-                                    : Text(
-                                        'Analyze Now',
-                                        style: TextStyle(
-                                          fontSize:
-                                              Responsive.responsiveFontSize(16),
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                              ),
-                            ),
-                            if (controller.selectedFile.value == null)
-                              Padding(
-                                padding: EdgeInsets.only(
-                                  top: Responsive.blockSizeVertical * 1,
-                                ),
-                                child: Text(
-                                  'Please select a resume file first',
-                                  style: TextStyle(
-                                    fontSize: Responsive.responsiveFontSize(12),
-                                    color: Colors.red,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                      SizedBox(height: Responsive.blockSizeVertical * 2),
                     ],
                   ),
                 ),
               ),
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
+
+  Widget _buildUploadDropzone(BuildContext context) {
+    return GestureDetector(
+      onTap: controller.pickFile,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(
+            color: const Color(0xFF38BDF8).withValues(alpha: 0.6),
+            width: 1.8,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF2563EB).withValues(alpha: 0.08),
+              blurRadius: 28,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            // Floating Center Logo
+            Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF2563EB).withValues(alpha: 0.18),
+                    blurRadius: 24,
+                  ),
+                ],
+              ),
+              child: const AppLogo(
+                size: 76,
+                animate: true,
+                showGlow: true,
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            const Text(
+              'Upload Your Resume',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF0F172A),
+              ),
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Click to browse or drop your document here',
+              style: TextStyle(
+                fontSize: 14,
+                color: Color(0xFF64748B),
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 18),
+
+            // Supported Format Badges
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildFormatBadge('PDF', const Color(0xFFEF4444)),
+                const SizedBox(width: 8),
+                _buildFormatBadge('DOCX', const Color(0xFF2563EB)),
+                const SizedBox(width: 8),
+                _buildFormatBadge('DOC', const Color(0xFF0D9488)),
+                const SizedBox(width: 12),
+                Text(
+                  'Max 5MB',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.blueGrey[400],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSelectedFileCard(BuildContext context) {
+    final file = controller.selectedFile.value!;
+    final sizeKb = (file.size / 1024).toStringAsFixed(1);
+    final ext = (file.extension ?? 'PDF').toUpperCase();
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: const Color(0xFF10B981).withValues(alpha: 0.6),
+          width: 1.8,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF10B981).withValues(alpha: 0.12),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 54,
+            height: 54,
+            decoration: BoxDecoration(
+              color: const Color(0xFFEFF6FF),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFBFDBFE)),
+            ),
+            child: const Icon(
+              Icons.description_rounded,
+              size: 28,
+              color: Color(0xFF2563EB),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  file.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF0F172A),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFDCFCE7),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        ext,
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF15803D),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '$sizeKb KB',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF64748B),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            onPressed: controller.clearFile,
+            tooltip: 'Remove File',
+            icon: const Icon(
+              Icons.close_rounded,
+              color: Color(0xFF64748B),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFormatBadge(String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: color,
+        ),
+      ),
+    );
+  }
+}
+
+class RoundedRectangleCross extends RoundedRectangleBorder {
+  const RoundedRectangleCross({super.borderRadius});
 }

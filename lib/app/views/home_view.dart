@@ -7,29 +7,28 @@ import '../models/resume_item.dart';
 import '../services/supabase_service.dart';
 import '../utils/responsive.dart';
 import '../widgets/responsive_builder.dart';
+import '../widgets/app_logo.dart';
 
 class HomeView extends StatelessWidget {
   const HomeView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final dashboardController = Get.find<DashboardController>();
+    final dashboardController = Get.isRegistered<DashboardController>()
+        ? Get.find<DashboardController>()
+        : Get.put(DashboardController());
     final historyController = Get.isRegistered<HistoryController>()
         ? Get.find<HistoryController>()
         : Get.put(HistoryController());
-    final user = SupabaseService.isConfigured
-        ? SupabaseService.auth.currentUser
-        : null;
+    final user = SupabaseService.currentUser;
     final userName = user?.userMetadata?['full_name'] ?? 'there';
 
     return ResponsiveBuilder(
       builder: (context, isDesktop, isTablet, isMobile) {
         final isWide = isDesktop || isTablet;
 
-        return Scaffold(
-          backgroundColor: const Color(0xFFF4F8FB),
-          body: Container(
-            decoration: const BoxDecoration(
+        return Container(
+          decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -221,6 +220,7 @@ class HomeView extends StatelessWidget {
                             ],
                           ),
                           SizedBox(height: Responsive.blockSizeVertical * 3),
+                          const SizedBox(height: 70), // clearance for floating dock
                         ],
                       ),
                     ),
@@ -228,10 +228,9 @@ class HomeView extends StatelessWidget {
                 );
               }),
             ),
-          ),
-        );
-      },
-    );
+          );
+        },
+      );
   }
 
   int _parseScore(String score) {
@@ -286,11 +285,7 @@ class _TopBar extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(
-                  Icons.auto_awesome_rounded,
-                  size: 16,
-                  color: Color(0xFF176D8D),
-                ),
+                const AppLogo(size: 26, showGlow: false),
                 const SizedBox(width: 8),
                 Flexible(
                   child: Text(
@@ -486,13 +481,23 @@ class _HeroCopy extends StatelessWidget {
             color: Colors.white.withValues(alpha: 0.14),
             borderRadius: BorderRadius.circular(999),
           ),
-          child: Text(
-            'Home base for analysis, progress, and next actions',
-            style: TextStyle(
-              fontSize: Responsive.responsiveFontSize(12),
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-            ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const AppLogo(size: 20, showGlow: false),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  'Intelligent Resume Analysis & Optimization',
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: Responsive.responsiveFontSize(12),
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
         SizedBox(height: Responsive.blockSizeVertical * 1.5),
@@ -1230,7 +1235,7 @@ class _ActionCard extends StatelessWidget {
       onTap: data.onTap,
       borderRadius: BorderRadius.circular(24),
       child: Ink(
-        padding: EdgeInsets.all(compact ? 16 : 20),
+        padding: EdgeInsets.all(compact ? 12 : 18),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(24),
@@ -1238,10 +1243,11 @@ class _ActionCard extends StatelessWidget {
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: compact ? 40 : 46,
-              height: compact ? 40 : 46,
+              width: compact ? 36 : 46,
+              height: compact ? 36 : 46,
               decoration: BoxDecoration(
                 color: data.color.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(14),
@@ -1249,27 +1255,27 @@ class _ActionCard extends StatelessWidget {
               child: Icon(
                 data.icon,
                 color: data.color,
-                size: compact ? 20 : 24,
+                size: compact ? 18 : 24,
               ),
             ),
-            SizedBox(height: compact ? 12 : 16),
+            SizedBox(height: compact ? 8 : 14),
             Text(
               data.title,
               style: TextStyle(
-                fontSize: Responsive.responsiveFontSize(compact ? 13 : 15),
+                fontSize: Responsive.responsiveFontSize(compact ? 12 : 15),
                 fontWeight: FontWeight.w800,
                 color: const Color(0xFF14313E),
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             Text(
               data.description,
-              maxLines: compact ? 3 : 4,
+              maxLines: compact ? 2 : 3,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: Responsive.responsiveFontSize(compact ? 11 : 12),
+                fontSize: Responsive.responsiveFontSize(compact ? 10 : 12),
                 color: const Color(0xFF6E818D),
-                height: 1.6,
+                height: 1.4,
               ),
             ),
           ],

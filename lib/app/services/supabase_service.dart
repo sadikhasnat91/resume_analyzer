@@ -1,5 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:gotrue/gotrue.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'config_service.dart';
 
@@ -28,6 +27,17 @@ class SupabaseService {
   }
 
   static bool get isInitialized => _initialized;
+
+  static bool get isReady => _initialized && isConfigured;
+
+  static User? get currentUser {
+    try {
+      if (isReady) {
+        return client.auth.currentUser;
+      }
+    } catch (_) {}
+    return null;
+  }
 
   static GoTrueClient get auth => client.auth;
 
