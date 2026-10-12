@@ -4,7 +4,9 @@ import 'app/routes/app_pages.dart';
 import 'app/routes/app_routes.dart';
 import 'app/services/config_service.dart';
 import 'app/services/supabase_service.dart';
-import 'app/widgets/responsive_builder.dart';
+import 'app/controllers/auth_controller.dart';
+import 'app/views/splash_view.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,6 +30,32 @@ Future<void> main() async {
   configService.printCurrentConfig();
 
   await SupabaseService.initialize();
+
+  // Listen to auth state changes globally immediately after initialization
+  SupabaseService.auth.onAuthStateChange.listen((data) {
+    final event = data.event;
+    debugPrint('Global Auth Event: \$event');
+    
+    if (event == AuthChangeEvent.passwordRecovery) {
+      debugPrint('Password recovery event detected!');
+      // Wait for navigation to be ready
+      Future.delayed(const Duration(milliseconds: 800), () {
+        if (Get.currentRoute != AppRoutes.resetPassword) {
+          Get.offAllNamed(AppRoutes.resetPassword);
+        }
+      });
+    } else if (event == AuthChangeEvent.signedIn || event == AuthChangeEvent.initialSession) {
+      // If SplashView was holding the navigation because of a 'code' in the URL,
+      // and it wasn't a password recovery, route to dashboard.
+      if (Uri.base.queryParameters.containsKey('code') && event != AuthChangeEvent.passwordRecovery) {
+        Future.delayed(const Duration(milliseconds: 1000), () {
+          if (Get.currentRoute == AppRoutes.splash) {
+             Get.offAllNamed(AppRoutes.dashboard);
+          }
+        });
+      }
+    }
+  });
 
   runApp(const ResumeAnalyzerApp());
 }
@@ -82,6 +110,10 @@ class ResumeAnalyzerApp extends StatelessWidget {
       ),
       initialRoute: initialRoute,
       getPages: AppPages.pages,
+      unknownRoute: GetPage(name: '/404', page: () => const SplashView()),
+      onInit: () {
+        Get.put(AuthController(), permanent: true);
+      },
     );
   }
 }

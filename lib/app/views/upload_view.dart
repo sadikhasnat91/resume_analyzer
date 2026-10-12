@@ -4,14 +4,15 @@ import '../controllers/upload_controller.dart';
 import '../widgets/ai_scanner_overlay.dart';
 import '../widgets/app_logo.dart';
 
-class UploadView extends GetView<UploadController> {
+class UploadView extends StatelessWidget {
   const UploadView({super.key});
+
+  UploadController get controller => Get.isRegistered<UploadController>()
+      ? Get.find<UploadController>()
+      : Get.put(UploadController(), permanent: true);
 
   @override
   Widget build(BuildContext context) {
-    if (!Get.isRegistered<UploadController>()) {
-      Get.put(UploadController());
-    }
 
     final size = MediaQuery.of(context).size;
     final isDesktop = size.width > 768;

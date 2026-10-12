@@ -5,4 +5,5 @@ class AppRoutes {
   static const dashboard = '/dashboard';
   static const upload = '/upload';
   static const analysis = '/analysis';
+  static const resetPassword = '/reset-password';
 }

@@ -62,6 +62,13 @@ class _SplashViewState extends State<SplashView>
 
   void _navigateNext() {
     if (!mounted) return;
+    
+    // If the URL has a PKCE code, wait for Supabase to handle the deep link.
+    // The global auth listener in main.dart will route us to the correct page.
+    if (Uri.base.queryParameters.containsKey('code')) {
+      return;
+    }
+
     final isLoggedIn =
         SupabaseService.isReady && SupabaseService.currentUser != null;
     if (isLoggedIn) {

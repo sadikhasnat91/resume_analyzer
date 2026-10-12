@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
-import '../routes/app_routes.dart';
 import '../widgets/app_logo.dart';
 
 class SignupView extends StatefulWidget {
@@ -59,82 +58,94 @@ class _SignupViewState extends State<SignupView>
     final isDesktop = size.width > 768;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F5F9),
+      backgroundColor: isDesktop ? const Color(0xFFF1F5F9) : Colors.white,
       body: Stack(
         children: [
-          // Background Gradient Mesh Orbs
-          Positioned(
-            top: -100,
-            right: -100,
-            child: Container(
-              width: 380,
-              height: 380,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    const Color(0xFF10B981).withValues(alpha: 0.18),
-                    Colors.transparent,
-                  ],
+          // Background Gradient Mesh Orbs (Desktop only)
+          if (isDesktop) ...[
+            Positioned(
+              top: -100,
+              right: -100,
+              child: Container(
+                width: 380,
+                height: 380,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      const Color(0xFF10B981).withValues(alpha: 0.18),
+                      Colors.transparent,
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-          Positioned(
-            bottom: -80,
-            left: -80,
-            child: Container(
-              width: 420,
-              height: 420,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    const Color(0xFF2563EB).withValues(alpha: 0.15),
-                    Colors.transparent,
-                  ],
+            Positioned(
+              bottom: -80,
+              left: -80,
+              child: Container(
+                width: 420,
+                height: 420,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      const Color(0xFF2563EB).withValues(alpha: 0.15),
+                      Colors.transparent,
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
+          ],
 
           // Main Scrollable Area
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
                 padding: EdgeInsets.symmetric(
-                  horizontal: isDesktop ? 48 : 24,
-                  vertical: 24,
+                  horizontal: isDesktop ? 48 : 0,
+                  vertical: isDesktop ? 24 : 12,
                 ),
                 child: FadeTransition(
                   opacity: _fadeAnimation,
                   child: SlideTransition(
                     position: _slideAnimation,
                     child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 460),
+                      constraints: BoxConstraints(
+                        maxWidth: isDesktop ? 460 : double.infinity,
+                      ),
                       child: Container(
-                        padding: EdgeInsets.all(isDesktop ? 36 : 28),
+                        padding: EdgeInsets.all(isDesktop ? 36 : 24),
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.94),
-                          borderRadius: BorderRadius.circular(32),
-                          border: Border.all(
-                            color: Colors.white,
-                            width: 1.5,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF0F172A).withValues(alpha: 0.08),
-                              blurRadius: 36,
-                              spreadRadius: 2,
-                              offset: const Offset(0, 14),
-                            ),
-                            BoxShadow(
-                              color: const Color(0xFF10B981).withValues(alpha: 0.06),
-                              blurRadius: 18,
-                              spreadRadius: -4,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
+                          color: Colors.white,
+                          borderRadius: isDesktop
+                              ? BorderRadius.circular(32)
+                              : BorderRadius.zero,
+                          border: isDesktop
+                              ? Border.all(
+                                  color: Colors.white,
+                                  width: 1.5,
+                                )
+                              : null,
+                          boxShadow: isDesktop
+                              ? [
+                                  BoxShadow(
+                                    color: const Color(0xFF0F172A)
+                                        .withValues(alpha: 0.08),
+                                    blurRadius: 36,
+                                    spreadRadius: 2,
+                                    offset: const Offset(0, 14),
+                                  ),
+                                  BoxShadow(
+                                    color: const Color(0xFF10B981)
+                                        .withValues(alpha: 0.06),
+                                    blurRadius: 18,
+                                    spreadRadius: -4,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ]
+                              : null,
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -271,7 +282,7 @@ class _SignupViewState extends State<SignupView>
                                         color: Color(0xFF2563EB),
                                         size: 20,
                                       ),
-                                      hintText: 'your.name@example.com',
+                                      hintText: 'Enter your email',
                                       hintStyle: const TextStyle(
                                         color: Color(0xFF94A3B8),
                                         fontSize: 14,

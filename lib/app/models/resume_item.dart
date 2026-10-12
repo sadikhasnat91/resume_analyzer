@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 class ResumeItem {
   final String? id;
   final String name;
@@ -23,6 +25,32 @@ class ResumeItem {
     this.suggestions = const [],
   });
 
+  ResumeItem copyWith({
+    String? id,
+    String? name,
+    String? category,
+    String? seniority,
+    String? date,
+    String? score,
+    int? scoreValue,
+    List<String>? strengths,
+    List<String>? weaknesses,
+    List<String>? suggestions,
+  }) {
+    return ResumeItem(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      category: category ?? this.category,
+      seniority: seniority ?? this.seniority,
+      date: date ?? this.date,
+      score: score ?? this.score,
+      scoreValue: scoreValue ?? this.scoreValue,
+      strengths: strengths ?? this.strengths,
+      weaknesses: weaknesses ?? this.weaknesses,
+      suggestions: suggestions ?? this.suggestions,
+    );
+  }
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -37,11 +65,46 @@ class ResumeItem {
       'strengths': strengths,
       'weaknesses': weaknesses,
       'suggestions': suggestions,
+      'metadata': {
+        'category': category,
+        'seniority': seniority,
+        'strengths': strengths,
+        'weaknesses': weaknesses,
+        'suggestions': suggestions,
+      },
+    };
+  }
+
+  Map<String, dynamic> toSupabaseMap(String userId) {
+    return {
+      'user_id': userId,
+      'file_name': name,
+      'score': scoreValue,
+      'feedback': suggestions.isNotEmpty ? suggestions.join('\n') : null,
+      'metadata': {
+        'category': category,
+        'seniority': seniority,
+        'strengths': strengths,
+        'weaknesses': weaknesses,
+        'suggestions': suggestions,
+      },
     };
   }
 
   factory ResumeItem.fromJson(Map<String, dynamic> json) {
-    final rawScore = json['score'];
+    Map<String, dynamic> meta = {};
+    if (json['metadata'] is Map) {
+      meta = Map<String, dynamic>.from(json['metadata'] as Map);
+    } else if (json['metadata'] is String) {
+      try {
+        final decoded = jsonDecode(json['metadata'] as String);
+        if (decoded is Map) {
+          meta = Map<String, dynamic>.from(decoded);
+        }
+      } catch (_) {}
+    }
+
+    final rawScore = json['score'] ?? meta['score'];
     int parsedScore = 78;
     if (rawScore is int) {
       parsedScore = rawScore;
@@ -53,36 +116,68 @@ class ResumeItem {
           78;
     }
 
-    final rawScoreText = json['score_text'] ?? json['score'];
-    final scoreStr = rawScoreText?.toString() ?? '$parsedScore%';
+    final rawScoreText =
+        json['score_text'] ?? meta['score_text'] ?? json['score'];
+    final scoreStr = rawScoreText != null
+        ? (rawScoreText.toString().contains('%')
+            ? rawScoreText.toString()
+            : '$rawScoreText%')
+        : '$parsedScore%';
 
-    final nameStr =
-        (json['fileName'] ?? json['file_name'] ?? json['name'])?.toString() ??
+    final nameStr = (json['fileName'] ??
+            json['file_name'] ??
+            json['name'] ??
+            meta['fileName'] ??
+            meta['file_name'] ??
+            meta['name'])
+        ?.toString() ??
         'resume.pdf';
-    final categoryStr = json['category']?.toString() ?? 'Software Engineering';
-    final seniorityStr = json['seniority']?.toString() ?? 'Senior';
-    final dateStr = json['date']?.toString() ?? 'Today';
+
+    final categoryStr =
+        (json['category'] ?? meta['category'])?.toString() ??
+        'Software Engineering';
+    final seniorityStr =
+        (json['seniority'] ?? meta['seniority'])?.toString() ?? 'Senior';
+    final dateStr = (json['date'] ?? meta['date'])?.toString() ?? 'Today';
+
+    List<String> parseList(dynamic raw) {
+      if (raw == null) return <String>[];
+      if (raw is List) {
+        return raw
+            .map((e) => e?.toString() ?? '')
+            .where((e) => e.isNotEmpty)
+            .toList();
+      }
+      if (raw is String) {
+        try {
+          final decoded = jsonDecode(raw);
+          if (decoded is List) {
+            return decoded
+                .map((e) => e?.toString() ?? '')
+                .where((e) => e.isNotEmpty)
+                .toList();
+          }
+        } catch (_) {}
+        if (raw.trim().isNotEmpty) {
+          if (raw.contains('\n')) {
+            return raw
+                .split('\n')
+                .map((e) => e.trim())
+                .where((e) => e.isNotEmpty)
+                .toList();
+          }
+          return [raw.trim()];
+        }
+      }
+      return <String>[];
+    }
 
     final strengthsList =
-        (json['strengths'] as List?)
-            ?.map((e) => e?.toString() ?? '')
-            .where((e) => e.isNotEmpty)
-            .toList() ??
-        <String>[];
-
+        parseList(json['strengths'] ?? meta['strengths']);
     final weaknessesList =
-        (json['weaknesses'] as List?)
-            ?.map((e) => e?.toString() ?? '')
-            .where((e) => e.isNotEmpty)
-            .toList() ??
-        <String>[];
-
+        parseList(json['weaknesses'] ?? meta['weaknesses']);
     final suggestionsList =
-        (json['suggestions'] as List?)
-            ?.map((e) => e?.toString() ?? '')
-            .where((e) => e.isNotEmpty)
-            .toList() ??
-        <String>[];
+        parseList(json['suggestions'] ?? meta['suggestions'] ?? json['feedback']);
 
     return ResumeItem(
       id: json['id']?.toString(),
@@ -90,7 +185,7 @@ class ResumeItem {
       category: categoryStr,
       seniority: seniorityStr,
       date: dateStr,
-      score: scoreStr.contains('%') ? scoreStr : '$scoreStr%',
+      score: scoreStr,
       scoreValue: parsedScore,
       strengths: strengthsList,
       weaknesses: weaknessesList,

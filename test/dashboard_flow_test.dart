@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -6,6 +5,7 @@ import 'package:ai_resume_analyzer/app/bindings/dashboard_binding.dart';
 import 'package:ai_resume_analyzer/app/controllers/dashboard_controller.dart';
 import 'package:ai_resume_analyzer/app/services/config_service.dart';
 import 'package:ai_resume_analyzer/app/views/dashboard_view.dart';
+import 'package:ai_resume_analyzer/app/views/upload_view.dart';
 import 'package:ai_resume_analyzer/app/routes/app_pages.dart';
 import 'package:ai_resume_analyzer/app/routes/app_routes.dart';
 
@@ -54,5 +54,28 @@ void main() {
     expect(find.text('Upload'), findsWidgets);
     expect(find.text('History'), findsWidgets);
     expect(find.text('Profile'), findsWidgets);
+
+    // Tap upload tab
+    await tester.tap(find.text('Upload').first);
+    await tester.pumpAndSettle();
+
+    expect(Get.find<DashboardController>().selectedIndex.value, 1);
+    expect(find.byType(UploadView), findsOneWidget);
+
+    // Tap history tab
+    await tester.tap(find.text('History').first);
+    await tester.pumpAndSettle();
+    expect(Get.find<DashboardController>().selectedIndex.value, 2);
+
+    // Tap profile tab
+    await tester.tap(find.text('Profile').first);
+    await tester.pumpAndSettle();
+    expect(Get.find<DashboardController>().selectedIndex.value, 3);
+
+    // Tap upload tab again
+    await tester.tap(find.text('Upload').first);
+    await tester.pumpAndSettle();
+    expect(Get.find<DashboardController>().selectedIndex.value, 1);
+    expect(find.byType(UploadView), findsOneWidget);
   });
 }

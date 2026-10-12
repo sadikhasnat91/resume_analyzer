@@ -7,6 +7,7 @@ import '../views/login_view.dart';
 import '../views/signup_view.dart';
 import '../views/splash_view.dart';
 import '../views/upload_view.dart';
+import '../views/reset_password_view.dart';
 import 'app_routes.dart';
 
 class AppPages {
@@ -25,5 +26,9 @@ class AppPages {
       binding: UploadBinding(),
     ),
     GetPage(name: AppRoutes.analysis, page: () => const AnalysisView()),
+    GetPage(
+      name: AppRoutes.resetPassword,
+      page: () => const ResetPasswordView(),
+    ),
   ];
 }

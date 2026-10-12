@@ -8,16 +8,16 @@ class DashboardBinding extends Bindings {
   @override
   void dependencies() {
     if (!Get.isRegistered<DashboardController>()) {
-      Get.put(DashboardController());
+      Get.put(DashboardController(), permanent: true);
     }
     if (!Get.isRegistered<UploadController>()) {
-      Get.put(UploadController());
+      Get.put(UploadController(), permanent: true);
     }
     if (!Get.isRegistered<HistoryController>()) {
-      Get.put(HistoryController());
+      Get.put(HistoryController(), permanent: true);
     }
     if (!Get.isRegistered<ProfileController>()) {
-      Get.put(ProfileController());
+      Get.put(ProfileController(), permanent: true);
     }
   }
 }

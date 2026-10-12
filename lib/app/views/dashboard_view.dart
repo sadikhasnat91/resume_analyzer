@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/dashboard_controller.dart';
+import '../controllers/history_controller.dart';
+import '../controllers/profile_controller.dart';
 import '../controllers/upload_controller.dart';
 import 'home_view.dart';
 import 'upload_view.dart';
@@ -14,10 +16,16 @@ class DashboardView extends StatelessWidget {
   Widget build(BuildContext context) {
     final controller = Get.isRegistered<DashboardController>()
         ? Get.find<DashboardController>()
-        : Get.put(DashboardController());
+        : Get.put(DashboardController(), permanent: true);
 
     if (!Get.isRegistered<UploadController>()) {
-      Get.put(UploadController());
+      Get.put(UploadController(), permanent: true);
+    }
+    if (!Get.isRegistered<HistoryController>()) {
+      Get.put(HistoryController(), permanent: true);
+    }
+    if (!Get.isRegistered<ProfileController>()) {
+      Get.put(ProfileController(), permanent: true);
     }
 
     final pages = const [

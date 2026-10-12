@@ -3,14 +3,15 @@ import 'package:get/get.dart';
 import '../controllers/profile_controller.dart';
 import '../widgets/app_logo.dart';
 
-class ProfileView extends GetView<ProfileController> {
+class ProfileView extends StatelessWidget {
   const ProfileView({super.key});
+
+  ProfileController get controller => Get.isRegistered<ProfileController>()
+      ? Get.find<ProfileController>()
+      : Get.put(ProfileController(), permanent: true);
 
   @override
   Widget build(BuildContext context) {
-    if (!Get.isRegistered<ProfileController>()) {
-      Get.put(ProfileController());
-    }
     return Scaffold(
       backgroundColor: const Color(0xFFF0F5F9),
       body: SafeArea(

@@ -5,7 +5,7 @@ class UploadBinding extends Bindings {
   @override
   void dependencies() {
     if (!Get.isRegistered<UploadController>()) {
-      Get.put(UploadController(), permanent: false);
+      Get.put(UploadController(), permanent: true);
     }
   }
 }

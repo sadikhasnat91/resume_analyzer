@@ -5,6 +5,7 @@ import '../routes/app_routes.dart';
 import '../services/supabase_service.dart';
 import '../services/message_service.dart';
 import 'dashboard_controller.dart';
+import 'history_controller.dart';
 
 class AuthController extends GetxController {
   final email = ''.obs;
@@ -13,6 +14,16 @@ class AuthController extends GetxController {
   final loginFormKey = GlobalKey<FormState>();
   final signupFormKey = GlobalKey<FormState>();
   final isLoading = false.obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+    _setupAuthListener();
+  }
+
+  void _setupAuthListener() {
+    // Moved to main.dart for reliable interception before widget tree mounts
+  }
 
   Future<void> login() async {
     if (loginFormKey.currentState?.validate() ?? false) {
@@ -42,6 +53,10 @@ class AuthController extends GetxController {
 
         if (Get.isRegistered<DashboardController>()) {
           Get.find<DashboardController>().changePage(0);
+        }
+
+        if (Get.isRegistered<HistoryController>()) {
+          Get.find<HistoryController>().fetchHistory();
         }
 
         await MessageService.showSuccess(
@@ -128,6 +143,46 @@ class AuthController extends GetxController {
       } finally {
         isLoading.value = false;
       }
+    }
+  }
+
+  Future<void> forgotPassword() async {
+    final emailValue = email.value.trim();
+    if (emailValue.isEmpty || !GetUtils.isEmail(emailValue)) {
+      await MessageService.showError(
+        title: 'Invalid Email',
+        message: 'Please enter a valid email address in the email field first to reset your password.',
+      );
+      return;
+    }
+
+    try {
+      isLoading.value = true;
+      if (!SupabaseService.isConfigured) {
+        await MessageService.showError(
+          title: 'Configuration Error',
+          message: 'Supabase is not configured. Please check your credentials.',
+        );
+        return;
+      }
+
+      await SupabaseService.auth.resetPasswordForEmail(emailValue);
+      await MessageService.showSuccess(
+        title: 'Password Reset',
+        message: 'A password reset link has been sent to $emailValue. Please check your inbox.',
+      );
+    } on AuthException catch (e) {
+      await MessageService.showError(
+        title: 'Reset Failed',
+        message: _authErrorMessage(e),
+      );
+    } catch (e) {
+      await MessageService.showError(
+        title: 'Reset Failed',
+        message: _authErrorMessage(e),
+      );
+    } finally {
+      isLoading.value = false;
     }
   }
 

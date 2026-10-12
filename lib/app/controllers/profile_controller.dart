@@ -5,6 +5,7 @@ import '../services/supabase_service.dart';
 import '../routes/app_routes.dart';
 import '../services/message_service.dart';
 import '../services/config_service.dart';
+import 'history_controller.dart';
 
 class ProfileController extends GetxController {
   final userName = 'ResumeAI User'.obs;
@@ -79,7 +80,7 @@ class ProfileController extends GetxController {
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
-              value: tempLanguage,
+              initialValue: tempLanguage,
               items: ['English', 'Spanish', 'French', 'German']
                   .map((lang) => DropdownMenuItem(value: lang, child: Text(lang)))
                   .toList(),
@@ -242,6 +243,9 @@ class ProfileController extends GetxController {
     if (confirmed == true) {
       try {
         await SupabaseService.auth.signOut();
+        if (Get.isRegistered<HistoryController>()) {
+          Get.find<HistoryController>().resumes.clear();
+        }
         Get.offAllNamed(AppRoutes.login);
       } catch (e) {
         await MessageService.showError(

@@ -14,7 +14,7 @@ class HistoryView extends StatelessWidget {
     final HistoryController controller =
         Get.isRegistered<HistoryController>()
             ? Get.find<HistoryController>()
-            : Get.put(HistoryController());
+            : Get.put(HistoryController(), permanent: true);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF0F5F9),
@@ -264,21 +264,25 @@ class _ResumeCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE2E8F0),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          resume.category,
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFF475569),
+                      Flexible(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE2E8F0),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            resume.category,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF475569),
+                            ),
                           ),
                         ),
                       ),
