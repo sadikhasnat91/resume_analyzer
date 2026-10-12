@@ -80,13 +80,13 @@ class ResumeItem {
       'user_id': userId,
       'file_name': name,
       'score': scoreValue,
-      'feedback': suggestions.isNotEmpty ? suggestions.join('\n') : null,
       'metadata': {
         'category': category,
         'seniority': seniority,
         'strengths': strengths,
         'weaknesses': weaknesses,
         'suggestions': suggestions,
+        'feedback': suggestions.isNotEmpty ? suggestions.join('\n') : '',
       },
     };
   }

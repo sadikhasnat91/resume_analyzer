@@ -16,6 +16,12 @@ class HistoryView extends StatelessWidget {
             ? Get.find<HistoryController>()
             : Get.put(HistoryController(), permanent: true);
 
+    if (controller.resumes.isEmpty && !controller.isLoading.value) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        controller.fetchHistory();
+      });
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFF0F5F9),
       body: SafeArea(

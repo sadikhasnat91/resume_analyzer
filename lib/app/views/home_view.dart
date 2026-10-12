@@ -20,6 +20,11 @@ class HomeView extends StatelessWidget {
     final historyController = Get.isRegistered<HistoryController>()
         ? Get.find<HistoryController>()
         : Get.put(HistoryController());
+    if (historyController.resumes.isEmpty && !historyController.isLoading.value) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        historyController.fetchHistory();
+      });
+    }
     final user = SupabaseService.currentUser;
     final userName = user?.userMetadata?['full_name'] ?? 'there';
 

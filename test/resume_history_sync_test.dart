@@ -23,7 +23,7 @@ void main() {
       expect(supabaseMap['user_id'], 'user-uuid-1234');
       expect(supabaseMap['file_name'], 'John_Doe_CV.pdf');
       expect(supabaseMap['score'], 88);
-      expect(supabaseMap['feedback'], 'Include more open source contributions');
+      expect(supabaseMap.containsKey('feedback'), isFalse);
       expect(supabaseMap['metadata'], isA<Map<String, dynamic>>());
 
       final meta = supabaseMap['metadata'] as Map<String, dynamic>;
@@ -32,12 +32,14 @@ void main() {
       expect(meta['strengths'], ['Clean structure', 'Strong metrics']);
       expect(meta['weaknesses'], ['Add GitHub links']);
       expect(meta['suggestions'], ['Include more open source contributions']);
+      expect(meta['feedback'], 'Include more open source contributions');
 
       // Ensure disallowed standalone columns are not present at the root
       expect(supabaseMap.containsKey('category'), isFalse);
       expect(supabaseMap.containsKey('seniority'), isFalse);
       expect(supabaseMap.containsKey('strengths'), isFalse);
       expect(supabaseMap.containsKey('weaknesses'), isFalse);
+      expect(supabaseMap.containsKey('suggestions'), isFalse);
     });
 
     test('fromJson correctly parses Supabase cloud response containing metadata', () {
