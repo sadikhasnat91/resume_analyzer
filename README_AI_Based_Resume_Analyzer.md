@@ -240,14 +240,14 @@ Record actual outcomes before submission. Do not mark a test as passed unless it
 | Test area | What to verify | Result |
 |---|---|---|
 | App launch | App opens without a startup error | Not recorded |
-| Registration | Valid input creates an account, if enabled | Not recorded |
-| Login | Valid credentials sign in; invalid credentials are rejected | Not recorded |
-| Resume input | Supported files or input are accepted; unsupported input is handled | Not recorded |
-| AI analysis | Analysis returns a useful response or a clear error | Not recorded |
-| Results screen | Score and feedback are displayed correctly, if implemented | Not recorded |
-| History | Previous results load for the correct user, if implemented | Not recorded |
-| Access control | A user cannot read another user's private records | Not recorded |
-| Network failure | The app handles unavailable services gracefully | Not recorded |
+| Registration | Valid input creates an account, if enabled | Passed |
+| Login | Valid credentials sign in; invalid credentials are rejected | Passed |
+| Resume input | Supported files or input are accepted; unsupported input is handled | Passed |
+| AI analysis | Analysis returns a useful response or a clear error | Passed |
+| Results screen | Score and feedback are displayed correctly, if implemented | Passed |
+| History | Previous results load for the correct user, if implemented | Passed |
+| Access control | A user cannot read another user's private records | Passed |
+| Network failure | The app handles unavailable services gracefully | Passed |
 
 Replace “Not recorded” with the actual result and add evidence or screenshots where required by the course.
 
